@@ -23,12 +23,14 @@ interface ICommonPackageJson extends IPackageJson {
     allowedDeprecatedVersions?: typeof PnpmOptionsConfiguration.prototype.globalAllowedDeprecatedVersions;
     patchedDependencies?: typeof PnpmOptionsConfiguration.prototype.globalPatchedDependencies;
   };
+  workspaces?: string[];
 }
 
 export class InstallHelpers {
   public static generateCommonPackageJson(
     rushConfiguration: RushConfiguration,
-    dependencies: Map<string, string> = new Map<string, string>()
+    dependencies: Map<string, string> = new Map<string, string>(),
+    workspaces?: string[]
   ): void {
     const commonPackageJson: ICommonPackageJson = {
       dependencies: {},
@@ -72,6 +74,10 @@ export class InstallHelpers {
       }
     }
 
+    if (workspaces) {
+      commonPackageJson.workspaces = workspaces;
+    }
+
     // Add any preferred versions to the top of the commonPackageJson
     // do this in alphabetical order for simpler debugging
     for (const dependency of Array.from(dependencies.keys()).sort()) {
@@ -108,6 +114,10 @@ export class InstallHelpers {
     } else if (rushConfiguration.packageManager === 'yarn') {
       if (rushConfiguration.yarnOptions && rushConfiguration.yarnOptions.environmentVariables) {
         configurationEnvironment = rushConfiguration.yarnOptions.environmentVariables;
+      }
+    } else if (rushConfiguration.packageManager === 'bun') {
+      if (rushConfiguration.bunOptions && rushConfiguration.bunOptions.environmentVariables) {
+        configurationEnvironment = rushConfiguration.bunOptions.environmentVariables;
       }
     }
 

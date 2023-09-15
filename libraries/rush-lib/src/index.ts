@@ -25,6 +25,10 @@ export {
   YarnOptionsConfiguration
 } from './logic/yarn/YarnOptionsConfiguration';
 export {
+  IBunOptionsJson as _IBunOptionsJson,
+  BunOptionsConfiguration
+} from './logic/bun/BunOptionsConfiguration';
+export {
   IPnpmOptionsJson as _IPnpmOptionsJson,
   PnpmStoreLocation,
   PnpmStoreOptions,

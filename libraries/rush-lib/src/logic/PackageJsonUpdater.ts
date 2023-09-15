@@ -716,6 +716,10 @@ export class PackageJsonUpdater {
         let commandArgs: string[];
         if (this._rushConfiguration.packageManager === 'yarn') {
           commandArgs = ['info', packageName, 'dist-tags.latest', '--silent'];
+        }
+        if (this._rushConfiguration.packageManager === 'bun') {
+          // npm needs to be installed
+          commandArgs = ['run', 'npm', 'view', `${packageName}@latest`, 'version'];
         } else {
           commandArgs = ['view', `${packageName}@latest`, 'version'];
         }

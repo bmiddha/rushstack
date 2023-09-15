@@ -85,6 +85,13 @@ export enum BumpType {
 }
 
 // @public
+export class BunOptionsConfiguration extends PackageManagerOptionsConfigurationBase {
+    // @internal
+    constructor(json: _IBunOptionsJson);
+    readonly useWorkspaces: boolean;
+}
+
+// @public
 export class ChangeManager {
     static createEmptyChangeFiles(rushConfiguration: RushConfiguration, projectName: string, emailAddress: string): string | undefined;
 }
@@ -308,6 +315,11 @@ export type GetCacheEntryIdFunction = (options: IGenerateCacheEntryIdOptions) =>
 export interface _IBuiltInPluginConfiguration extends _IRushPluginConfigurationBase {
     // (undocumented)
     pluginPackageFolder: string;
+}
+
+// @internal
+export interface _IBunOptionsJson extends IPackageManagerOptionsJsonBase {
+    useWorkspaces?: boolean;
 }
 
 // @beta (undocumented)
@@ -934,7 +946,7 @@ export abstract class PackageManager {
 }
 
 // @public
-export type PackageManagerName = 'pnpm' | 'npm' | 'yarn';
+export type PackageManagerName = 'pnpm' | 'npm' | 'yarn' | 'bun';
 
 // @public
 export abstract class PackageManagerOptionsConfigurationBase implements IPackageManagerOptionsJsonBase {
@@ -1035,6 +1047,8 @@ export class Rush {
 export class RushConfiguration {
     readonly allowMostlyStandardPackageNames: boolean;
     readonly approvedPackagesPolicy: ApprovedPackagesPolicy;
+    readonly bunCacheFolder: string;
+    readonly bunOptions: BunOptionsConfiguration;
     readonly changesFolder: string;
     // @deprecated
     get committedShrinkwrapFilename(): string;
@@ -1179,6 +1193,7 @@ export class RushConstants {
     static readonly buildCacheVersion: number;
     static readonly buildCommandName: string;
     static readonly bulkCommandKind: 'bulk';
+    static readonly bunShrinkwrapFilename: string;
     static readonly bypassPolicyFlagLongName: '--bypass-policy';
     static readonly changeFilesFolderName: string;
     static readonly cobuildFilename: string;

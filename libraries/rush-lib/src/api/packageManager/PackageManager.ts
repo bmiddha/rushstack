@@ -5,10 +5,10 @@
  * This represents the available Package Manager tools as a string
  * @public
  */
-export type PackageManagerName = 'pnpm' | 'npm' | 'yarn';
+export type PackageManagerName = 'pnpm' | 'npm' | 'yarn' | 'bun';
 
 /**
- * An abstraction for controlling the supported package managers: PNPM, NPM, and Yarn.
+ * An abstraction for controlling the supported package managers: PNPM, NPM, Bun, and Yarn.
  * @public
  */
 export abstract class PackageManager {

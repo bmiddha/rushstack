@@ -520,7 +520,9 @@ ${gitLfsHookHandling}
    * to the command-line.
    */
   protected pushConfigurationArgs(args: string[], options: IInstallManagerOptions): void {
-    if (this.rushConfiguration.packageManager === 'npm') {
+    if (this.rushConfiguration.packageManager === 'bun') {
+      args.push('--cache-dir', this.rushConfiguration.bunCacheFolder);
+    } else if (this.rushConfiguration.packageManager === 'npm') {
       if (semver.lt(this.rushConfiguration.packageManagerToolVersion, '5.0.0')) {
         // NOTE:
         //

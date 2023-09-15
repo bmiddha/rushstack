@@ -168,11 +168,19 @@ export class RushInstallManager extends BaseInstallManager {
       // Example: "C:\MyRepo\common\temp\projects\my-project-2.tgz"
       const tarballFile: string = this._tempProjectHelper.getTarballFilePath(rushProject);
 
-      // Example: dependencies["@rush-temp/my-project-2"] = "file:./projects/my-project-2.tgz"
-      commonDependencies.set(
-        rushProject.tempProjectName,
-        `file:./${RushConstants.rushTempProjectsFolderName}/${rushProject.unscopedTempProjectName}.tgz`
-      );
+      if (this.rushConfiguration.packageManager === 'bun') {
+        // Example: dependencies["@rush-temp/my-project-2"] = "file://./projects/my-project-2.tgz"
+        commonDependencies.set(
+          rushProject.tempProjectName,
+          `file://./${RushConstants.rushTempProjectsFolderName}/${rushProject.unscopedTempProjectName}.tgz`
+        );
+      } else {
+        // Example: dependencies["@rush-temp/my-project-2"] = "file:./projects/my-project-2.tgz"
+        commonDependencies.set(
+          rushProject.tempProjectName,
+          `file:./${RushConstants.rushTempProjectsFolderName}/${rushProject.unscopedTempProjectName}.tgz`
+        );
+      }
 
       const tempPackageJson: IRushTempPackageJson = {
         name: rushProject.tempProjectName,
@@ -437,12 +445,12 @@ export class RushInstallManager extends BaseInstallManager {
   }
 
   /**
-   * Runs "npm/pnpm/yarn install" in the "common/temp" folder.
+   * Runs "npm/pnpm/yarn/bun install" in the "common/temp" folder.
    *
    * @override
    */
   protected async installAsync(cleanInstall: boolean): Promise<void> {
-    // Since we are actually running npm/pnpm/yarn install, recreate all the temp project tarballs.
+    // Since we are actually running npm/pnpm/yarn/bun install, recreate all the temp project tarballs.
     // This ensures that any existing tarballs with older header bits will be regenerated.
     // It is safe to assume that temp project pacakge.jsons already exist.
     for (const rushProject of this.rushConfiguration.projects) {
