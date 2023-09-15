@@ -23,13 +23,14 @@
    * Rush installs its own local copy of the package manager to ensure that your build process
    * is fully isolated from whatever tools are present in the local environment.
    *
-   * Specify one of: "pnpmVersion", "npmVersion", or "yarnVersion".  See the Rush documentation
+   * Specify one of: "bunVersion", "pnpmVersion", "npmVersion", or "yarnVersion".  See the Rush documentation
    * for details about these alternatives.
    */
   "pnpmVersion": "7.33.5",
 
   /*[LINE "HYPOTHETICAL"]*/ "npmVersion": "6.14.15",
   /*[LINE "HYPOTHETICAL"]*/ "yarnVersion": "1.9.4",
+  /*[LINE "HYPOTHETICAL"]*/ "bunVersion": "1.9.4",
 
   /**
    * Older releases of the Node.js engine may be missing features required by your system.

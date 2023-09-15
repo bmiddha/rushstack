@@ -29,6 +29,7 @@ import { PackageManagerName, PackageManager } from './packageManager/PackageMana
 import { NpmPackageManager } from './packageManager/NpmPackageManager';
 import { YarnPackageManager } from './packageManager/YarnPackageManager';
 import { PnpmPackageManager } from './packageManager/PnpmPackageManager';
+import { BunPackageManager } from './packageManager/BunPackageManager';
 import { ExperimentsConfiguration } from './ExperimentsConfiguration';
 import { PackageNameParsers } from './PackageNameParsers';
 import { RepoStateFile } from '../logic/RepoStateFile';
@@ -37,6 +38,7 @@ import { RushPluginsConfiguration } from './RushPluginsConfiguration';
 import { IPnpmOptionsJson, PnpmOptionsConfiguration } from '../logic/pnpm/PnpmOptionsConfiguration';
 import { INpmOptionsJson, NpmOptionsConfiguration } from '../logic/npm/NpmOptionsConfiguration';
 import { IYarnOptionsJson, YarnOptionsConfiguration } from '../logic/yarn/YarnOptionsConfiguration';
+import { IBunOptionsJson, BunOptionsConfiguration } from '../logic/bun/BunOptionsConfiguration';
 import schemaJson from '../schemas/rush.schema.json';
 
 import type * as DependencyAnalyzerModuleType from '../logic/DependencyAnalyzer';
@@ -157,6 +159,7 @@ export interface IRushConfigurationJson {
   npmVersion?: string;
   pnpmVersion?: string;
   yarnVersion?: string;
+  bunVersion?: string;
   rushVersion: string;
   repository?: IRushRepositoryJson;
   nodeSupportedVersionRange?: string;
@@ -175,6 +178,7 @@ export interface IRushConfigurationJson {
   npmOptions?: INpmOptionsJson;
   pnpmOptions?: IPnpmOptionsJson;
   yarnOptions?: IYarnOptionsJson;
+  bunOptions?: IBunOptionsJson;
   ensureConsistentVersions?: boolean;
   variants?: IRushVariantOptionsJson[];
 }
@@ -319,6 +323,13 @@ export class RushConfiguration {
    * Example: `C:\MyRepo\common\temp\yarn-cache`
    */
   public readonly yarnCacheFolder: string;
+
+  /**
+   * The local folder that will store the Bun package cache.
+   *
+   * Example: `C:\MyRepo\common\temp\bun-cache`
+   */
+  public readonly bunCacheFolder: string;
 
   /**
    * The filename (without any path) of the shrinkwrap file that is used by the package manager.
@@ -510,10 +521,16 @@ export class RushConfiguration {
   public readonly yarnOptions: YarnOptionsConfiguration;
 
   /**
+   * {@inheritDoc YarnOptionsConfiguration}
+   */
+  public readonly bunOptions: BunOptionsConfiguration;
+
+  /**
    * The configuration options used by the current package manager.
    * @remarks
    * For package manager specific variants, reference {@link RushConfiguration.npmOptions | npmOptions},
-   * {@link RushConfiguration.pnpmOptions | pnpmOptions}, or {@link RushConfiguration.yarnOptions | yarnOptions}.
+   * {@link RushConfiguration.pnpmOptions | pnpmOptions}, or {@link RushConfiguration.yarnOptions | yarnOptions}
+   * or {@link RushConfiguration.bunOptions | bunOptions}.
    */
   public readonly packageManagerOptions!: PackageManagerOptionsConfigurationBase;
 
@@ -612,6 +629,7 @@ export class RushConfiguration {
     this.npmCacheFolder = path.resolve(path.join(this.commonTempFolder, 'npm-cache'));
     this.npmTmpFolder = path.resolve(path.join(this.commonTempFolder, 'npm-tmp'));
     this.yarnCacheFolder = path.resolve(path.join(this.commonTempFolder, 'yarn-cache'));
+    this.bunCacheFolder = path.resolve(path.join(this.commonTempFolder, 'bun-cache'));
 
     this.changesFolder = path.join(this.commonFolder, RushConstants.changeFilesFolderName);
 
@@ -635,6 +653,7 @@ export class RushConfiguration {
 
     this.npmOptions = new NpmOptionsConfiguration(rushConfigurationJson.npmOptions || {});
     this.yarnOptions = new YarnOptionsConfiguration(rushConfigurationJson.yarnOptions || {});
+    this.bunOptions = new BunOptionsConfiguration(rushConfigurationJson.bunOptions || {});
     try {
       this.pnpmOptions = PnpmOptionsConfiguration.loadFromJsonFileOrThrow(
         `${this.commonRushConfigFolder}/${RushConstants.pnpmConfigFilename}`,
@@ -675,6 +694,11 @@ export class RushConfiguration {
       this.packageManagerOptions = this.yarnOptions;
       packageManagerFields.push('yarnVersion');
     }
+    if (rushConfigurationJson.bunVersion) {
+      this.packageManager = 'bun';
+      this.packageManagerOptions = this.bunOptions;
+      packageManagerFields.push('bunVersion');
+    }
 
     if (packageManagerFields.length === 0) {
       throw new Error(
@@ -695,6 +719,9 @@ export class RushConfiguration {
     } else if (this.packageManager === 'pnpm') {
       this.packageManagerToolVersion = rushConfigurationJson.pnpmVersion!;
       this.packageManagerWrapper = new PnpmPackageManager(this.packageManagerToolVersion);
+    } else if (this.packageManager === 'bun') {
+      this.packageManagerToolVersion = rushConfigurationJson.bunVersion!;
+      this.packageManagerWrapper = new BunPackageManager(this.packageManagerToolVersion);
     } else {
       this.packageManagerToolVersion = rushConfigurationJson.yarnVersion!;
       this.packageManagerWrapper = new YarnPackageManager(this.packageManagerToolVersion);

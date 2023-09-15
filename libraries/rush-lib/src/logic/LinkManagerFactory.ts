@@ -16,6 +16,9 @@ export class LinkManagerFactory {
       case 'yarn':
         // Yarn uses the same node_modules structure as NPM
         return new NpmLinkManager(rushConfiguration);
+      case 'bun':
+        // Bun uses the same node_modules structure as NPM
+        return new NpmLinkManager(rushConfiguration);
       default:
         throw new Error(`Unsupported package manager: ${rushConfiguration.packageManager}`);
     }

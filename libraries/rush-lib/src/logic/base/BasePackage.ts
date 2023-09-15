@@ -45,6 +45,8 @@ export interface IRushTempPackageJson extends IPackageJson {
    * references to locally built projects.
    */
   rushDependencies?: { [key: string]: string };
+
+  workspaces?: string[];
 }
 
 /**

@@ -7,6 +7,7 @@ import { BaseShrinkwrapFile } from './base/BaseShrinkwrapFile';
 import { NpmShrinkwrapFile } from './npm/NpmShrinkwrapFile';
 import { PnpmShrinkwrapFile } from './pnpm/PnpmShrinkwrapFile';
 import { YarnShrinkwrapFile } from './yarn/YarnShrinkwrapFile';
+import { BunShrinkwrapFile } from './bun/BunShrinkwrapFile';
 
 export class ShrinkwrapFileFactory {
   public static getShrinkwrapFile(
@@ -21,6 +22,8 @@ export class ShrinkwrapFileFactory {
         return PnpmShrinkwrapFile.loadFromFile(shrinkwrapFilename);
       case 'yarn':
         return YarnShrinkwrapFile.loadFromFile(shrinkwrapFilename);
+      case 'bun':
+        return BunShrinkwrapFile.loadFromFile(shrinkwrapFilename);
       default:
         throw new Error(`Invalid package manager: ${packageManager}`);
     }
@@ -36,8 +39,8 @@ export class ShrinkwrapFileFactory {
         return NpmShrinkwrapFile.loadFromString(shrinkwrapContent);
       case 'pnpm':
         return PnpmShrinkwrapFile.loadFromString(shrinkwrapContent);
-      case 'yarn':
-        return YarnShrinkwrapFile.loadFromString(shrinkwrapContent);
+      case 'bun':
+        return BunShrinkwrapFile.loadFromString(shrinkwrapContent);
       default:
         throw new Error(`Invalid package manager: ${packageManager}`);
     }

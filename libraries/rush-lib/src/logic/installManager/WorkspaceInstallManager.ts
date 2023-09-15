@@ -4,7 +4,7 @@
 import colors from 'colors/safe';
 import * as path from 'path';
 import * as semver from 'semver';
-import { FileSystem, FileConstants, AlreadyReportedError, Async } from '@rushstack/node-core-library';
+import { FileSystem, FileConstants, AlreadyReportedError, Async, Path } from '@rushstack/node-core-library';
 
 import { BaseInstallManager } from '../base/BaseInstallManager';
 import type { IInstallManagerOptions } from '../base/BaseInstallManagerTypes';
@@ -28,6 +28,8 @@ import {
   CustomTipsConfiguration,
   ICustomTipInfo
 } from '../../api/CustomTipsConfiguration';
+
+const globEscape: (unescaped: string) => string = require('glob-escape'); // No @types/glob-escape package exists
 
 /**
  * This class implements common logic between "rush install" and "rush update".
@@ -128,15 +130,13 @@ export class WorkspaceInstallManager extends BaseInstallManager {
     }
 
     // To generate the workspace file, we will add each project to the file as we loop through and validate
-    const workspaceFile: PnpmWorkspaceFile = new PnpmWorkspaceFile(
-      path.join(this.rushConfiguration.commonTempFolder, 'pnpm-workspace.yaml')
-    );
+    const workspacePackages: Set<string> = new Set<string>();
 
     // Loop through the projects and add them to the workspace file. While we're at it, also validate that
     // referenced workspace projects are valid, and check if the shrinkwrap file is already up-to-date.
     for (const rushProject of this.rushConfiguration.projects) {
       const packageJson: PackageJsonEditor = rushProject.packageJsonEditor;
-      workspaceFile.addPackage(rushProject.projectFolder);
+      workspacePackages.add(rushProject.projectFolder);
 
       for (const { name, version, dependencyType } of [
         ...packageJson.dependencyList,
@@ -231,12 +231,47 @@ export class WorkspaceInstallManager extends BaseInstallManager {
       }
     }
 
-    // Write the common package.json
-    InstallHelpers.generateCommonPackageJson(this.rushConfiguration);
+    if (this.rushConfiguration.packageManager === 'pnpm') {
+      const workspaceFile: PnpmWorkspaceFile = new PnpmWorkspaceFile(
+        path.join(this.rushConfiguration.commonTempFolder, 'pnpm-workspace.yaml')
+      );
 
-    // Save the generated workspace file. Don't update the file timestamp unless the content has changed,
-    // since "rush install" will consider this timestamp
-    workspaceFile.save(workspaceFile.workspaceFilename, { onlyIfChanged: true });
+      for (const workspacePackage of workspacePackages) {
+        workspaceFile.addPackage(workspacePackage);
+      }
+
+      // Write the common package.json
+      InstallHelpers.generateCommonPackageJson(this.rushConfiguration);
+
+      // Save the generated workspace file. Don't update the file timestamp unless the content has changed,
+      // since "rush install" will consider this timestamp
+      workspaceFile.save(workspaceFile.workspaceFilename, { onlyIfChanged: true });
+    } else if (this.rushConfiguration.packageManager === 'bun') {
+      const workspacePackagesSet: Set<string> = new Set<string>();
+      for (let workspacePackage of workspacePackages) {
+        const packageJsonPath: string = path.join(
+          this.rushConfiguration.commonTempFolder,
+          FileConstants.PackageJson
+        );
+        // Ensure the path is relative to the pnpm-workspace.yaml file
+        if (path.isAbsolute(workspacePackage)) {
+          workspacePackage = path.relative(path.dirname(packageJsonPath), workspacePackage);
+        }
+
+        // Glob can't handle Windows paths
+        const globPath: string = Path.convertToSlashes(workspacePackage);
+        workspacePackagesSet.add(globEscape(globPath));
+      }
+
+      // Write the common package.json
+      InstallHelpers.generateCommonPackageJson(
+        this.rushConfiguration,
+        undefined,
+        Array.from(workspacePackagesSet)
+      );
+    } else {
+      throw new Error(`Unsupported package manager for workspaces: ${this.rushConfiguration.packageManager}`);
+    }
 
     return { shrinkwrapIsUpToDate, shrinkwrapWarnings };
   }
@@ -461,6 +496,19 @@ export class WorkspaceInstallManager extends BaseInstallManager {
       this.rushConfiguration.pnpmOptions?.useWorkspaces
     ) {
       // If we're in PNPM workspace mode and PNPM didn't create a shrinkwrap file,
+      // there are no dependencies. Generate empty shrinkwrap files for all projects.
+      await Async.forEachAsync(
+        this.rushConfiguration.projects,
+        async (project) => {
+          await BaseProjectShrinkwrapFile.saveEmptyProjectShrinkwrapFileAsync(project);
+        },
+        { concurrency: 10 }
+      );
+    } else if (
+      this.rushConfiguration.packageManager === 'bun' &&
+      this.rushConfiguration.bunOptions?.useWorkspaces
+    ) {
+      // If we're in Bun workspace mode and Bun didn't create a shrinkwrap file,
       // there are no dependencies. Generate empty shrinkwrap files for all projects.
       await Async.forEachAsync(
         this.rushConfiguration.projects,

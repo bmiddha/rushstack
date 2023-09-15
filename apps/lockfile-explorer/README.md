@@ -33,7 +33,7 @@ Here's how to invoke the **Rush Lockfile Explorer** tool:
 ```bash
 # Install the NPM package globally.
 #
-# (You could substitute "pnpm" or "yarn" instead of "npm" here.  To avoid confusing
+# (You could substitute "bun" or "pnpm" or "yarn" instead of "npm" here.  To avoid confusing
 # duplicate installs, always use the same tool for global installations!)
 npm install -g @rushstack/lockfile-explorer
 

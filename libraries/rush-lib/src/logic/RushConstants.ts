@@ -71,6 +71,11 @@ export class RushConstants {
   public static readonly npmShrinkwrapFilename: string = 'npm-shrinkwrap.json';
 
   /**
+   * The filename ("bun.lockb") used to store an installation plan for the NPM package manger.
+   */
+  public static readonly bunShrinkwrapFilename: string = 'bun.lockb';
+
+  /**
    * Number of installation attempts
    */
   public static readonly defaultMaxInstallAttempts: number = 1;

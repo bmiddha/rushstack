@@ -24,6 +24,10 @@ export class InstallManagerFactory {
       return new WorkspaceInstallManager(rushConfiguration, rushGlobalFolder, purgeManager, options);
     }
 
+    if (rushConfiguration.packageManager === 'bun' && rushConfiguration.bunOptions?.useWorkspaces) {
+      return new WorkspaceInstallManager(rushConfiguration, rushGlobalFolder, purgeManager, options);
+    }
+
     const rushInstallManagerModule: typeof import('./installManager/RushInstallManager') = await import(
       /* webpackChunkName: 'RushInstallManager' */
       './installManager/RushInstallManager'

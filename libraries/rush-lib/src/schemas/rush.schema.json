@@ -47,6 +47,12 @@
       "pattern": "^[0-9]+\\.[0-9]+\\.[0-9a-zA-Z.+\\-]+$"
     },
 
+    "bunVersion": {
+      "description": "If specified, selects Bun as the package manager and specifies the deterministic version to be installed by Rush.",
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9a-zA-Z.+\\-]+$"
+    },
+
     "rushVersion": {
       "description": "The version of the Rush tool that will be used to build this repository.",
       "type": "string",
@@ -80,6 +86,20 @@
       "description": "Options that are only used when the NPM package manager is selected.",
       "type": "object",
       "properties": {
+        "environmentVariables": {
+          "$ref": "#/definitions/environmentVariables"
+        }
+      },
+      "additionalProperties": false
+    },
+    "bunOptions": {
+      "description": "Options that are only used when the PNPM pacakge manager is selected.",
+      "type": "object",
+      "properties": {
+        "useWorkspaces": {
+          "description": "If true, then Rush will use the workspaces feature to install and link packages when invoking PNPM. The default value is false.",
+          "type": "boolean"
+        },
         "environmentVariables": {
           "$ref": "#/definitions/environmentVariables"
         }
