@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@microsoft/rush",
+      "comment": "rush add: add CLI parameter to allow specifying approved packages policy name",
+      "type": "none"
+    }
+  ],
+  "packageName": "@microsoft/rush"
+}
