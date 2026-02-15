@@ -4,7 +4,7 @@
 import * as path from 'path';
 
 import { CommandLineAction, type ICommandLineActionOptions } from '@rushstack/ts-command-line';
-import { LockFile } from '@rushstack/node-core-library';
+import { FileSystem, LockFile } from '@rushstack/node-core-library';
 import { Colorize, type ITerminal } from '@rushstack/terminal';
 
 import type { RushConfiguration } from '../../api/RushConfiguration';
@@ -63,10 +63,14 @@ export abstract class BaseConfiglessRushAction extends CommandLineAction impleme
     if (this.rushConfiguration) {
       if (!this._safeForSimultaneousRushProcesses) {
         if (!LockFile.tryAcquire(this.rushConfiguration.commonTempFolder, 'rush')) {
-          this.terminal.writeLine(
-            Colorize.red(`Another Rush command is already running in this repository.`)
+          const holdingPid: string | undefined = BaseConfiglessRushAction._getHoldingProcessPid(
+            this.rushConfiguration.commonTempFolder
           );
-          process.exit(1);
+          const pidMessage: string = holdingPid ? ` (PID ${holdingPid})` : '';
+          this.terminal.writeLine(
+            Colorize.yellow(`Waiting for another Rush command${pidMessage} to finish running...`)
+          );
+          await LockFile.acquireAsync(this.rushConfiguration.commonTempFolder, 'rush');
         }
       }
     }
@@ -95,6 +99,33 @@ export abstract class BaseConfiglessRushAction extends CommandLineAction impleme
       // eslint-disable-next-line dot-notation
       process.env['PATH'] = environmentPath;
     }
+  }
+
+  /**
+   * Scans the resource folder for lock files held by other processes and returns the PID
+   * of the first one found. On Windows, lock files don't encode the PID, so this returns undefined.
+   */
+  private static _getHoldingProcessPid(resourceFolder: string): string | undefined {
+    if (process.platform === 'win32') {
+      return undefined;
+    }
+
+    try {
+      const files: string[] = FileSystem.readFolderItemNames(resourceFolder);
+      const lockFileRegExp: RegExp = /^rush#([0-9]+)\.lock$/;
+      const currentPid: string = process.pid.toString();
+
+      for (const file of files) {
+        const match: RegExpMatchArray | null = file.match(lockFileRegExp);
+        if (match && match[1] !== currentPid) {
+          return match[1];
+        }
+      }
+    } catch {
+      // Folder might not exist or be readable
+    }
+
+    return undefined;
   }
 }
 

@@ -1,0 +1,11 @@
+{
+  "changes": [
+    {
+      "comment": "Wait for lock release instead of failing when another Rush command is already running",
+      "type": "none",
+      "packageName": "@microsoft/rush"
+    }
+  ],
+  "packageName": "@microsoft/rush",
+  "email": "5100938+bmiddha@users.noreply.github.com"
+}
